@@ -1,95 +1,225 @@
----
-title: Get started with custom builds
-sidebar_title: Get started
-description: Learn how to extend EAS Build with custom builds.
----
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 
-import { GithubIcon } from '@expo/styleguide-icons/custom/GithubIcon';
+const starterPosts = [
+  {
+    id: "1",
+    user: "You",
+    caption: "Morning coffee together ☕",
+    image:
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1200&auto=format&fit=crop",
+    time: "2h ago",
+  },
+  {
+    id: "2",
+    user: "Girlfriend",
+    caption: "Movie night 🍿",
+    image:
+      "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=1200&auto=format&fit=crop",
+    time: "5h ago",
+  },
+];
 
-import { BoxLink } from '~/ui/components/BoxLink';
-import { Terminal } from '~/ui/components/Snippet';
-import { Step } from '~/ui/components/Step';
+export default function App() {
+  const [posts, setPosts] = useState(starterPosts);
+  const [caption, setCaption] = useState("");
 
-Custom builds allow customizing the build process for your project by running commands before, during, or after the build process. Customized builds can run from EAS CLI or when running builds in a React Native CI/CD pipeline, like with [EAS Workflows](/eas/workflows/get-started/).
+  const addPost = () => {
+    if (!caption) return;
 
-<Step label="1">
+    const newPost = {
+      id: Date.now().toString(),
+      user: "You",
+      caption,
+      image:
+        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop",
+      time: "Just now",
+    };
 
-## Create a custom build config
+    setPosts([newPost, ...posts]);
+    setCaption("");
+  };
 
-To get started, create directories and a file named **.eas/build/hello-world.yml** at the same level as **eas.json**. The location and name of both directories are important for EAS Build to identify that a project contains a custom build config.
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Daily Couple Moments 💖</Text>
+          <Text style={styles.subtitle}>
+            Share everyday memories together.
+          </Text>
+        </View>
 
-Inside the **hello-world.yml**, you'll write your custom build config. The filename is unimportant; you can name it whatever you want. The only requirement is that the file extension uses **.yml**.
+        <View style={styles.uploadCard}>
+          <Text style={styles.cardTitle}>Post Today's Moment</Text>
 
-Add the following custom build config steps in the file:
+          <TextInput
+            placeholder="What are you doing today?"
+            placeholderTextColor="#999"
+            style={styles.input}
+            value={caption}
+            onChangeText={setCaption}
+          />
 
-```yaml .eas/build/hello-world.yml
-build:
-  name: Hello World!
-  steps:
-    - run: echo "Hello, world!"
-    # A built-in function (optional)
-```
+          <TouchableOpacity style={styles.uploadButton}>
+            <Text style={styles.uploadButtonText}>📷 Choose Picture</Text>
+          </TouchableOpacity>
 
-In a real world scenario, you will call a [built-in function](/custom-builds/schema/#built-in-eas-functions) to trigger the build.
+          <TouchableOpacity style={styles.postButton} onPress={addPost}>
+            <Text style={styles.postButtonText}>Share Moment ✨</Text>
+          </TouchableOpacity>
+        </View>
 
-</Step>
+        <Text style={styles.feedTitle}>Your Shared Feed</Text>
 
-<Step label="2">
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          renderItem={({ item }) => (
+            <View style={styles.postCard}>
+              <Image source={{ uri: item.image }} style={styles.postImage} />
 
-## Add `config` property in eas.json
+              <View style={styles.postContent}>
+                <View style={styles.postHeader}>
+                  <View>
+                    <Text style={styles.postUser}>{item.user}</Text>
+                    <Text style={styles.postTime}>{item.time}</Text>
+                  </View>
 
-To use the custom build config, add the `config` property in **eas.json** under a build profile.
+                  <Text style={styles.heart}>❤️</Text>
+                </View>
 
-Let's create a new [build profile](/build/eas-json/#build-profiles) called `test` under `build` to run the custom config from the **test.yml** file:
-
-```json eas.json
-{
-  "build": {
-    /* @hide ... */ /* @end */
-    "test": {
-      "config": "test.yml",
-    },
+                <Text style={styles.caption}>{item.caption}</Text>
+              </View>
+            </View>
+          )}
+        />
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
-```
 
-If you wish to use separate configs for each platform, you can create separate YAML config files for Android and iOS. For example:
-
-```json eas.json
-{
-  "build": {
-    /* @hide ... */ /* @end */
-    "test": {
-      "ios": {
-        "config": "hello-ios.yml",
-      },
-      "android": {
-        "config": "hello-android.yml",
-      }
-    },
-}
-```
-
-</Step>
-
-<Step label="3">
-
-## Run a build to test the custom build config
-
-To test the custom build config, run the following command:
-
-<Terminal cmd={['$ eas build -p android -e test']} />
-
-After the build is complete, you can verify that the `echo "Hello World!"` script was executed by checking the logs on the build's detail page.
-
-</Step>
-
-## Learn more
-
-Check out the example repository for more detailed examples:
-
-<BoxLink
-  title="Custom build example repository"
-  description="A custom EAS Build example that includes examples for custom builds such as setting up functions, using environment variables, uploading artifacts, and more."
-  Icon={GithubIcon}
-  href="https://github.com/expo/eas-custom-builds-example/tree/main"
-/>
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff1f2",
+  },
+  header: {
+    padding: 24,
+    paddingTop: 40,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "#222",
+  },
+  subtitle: {
+    marginTop: 8,
+    color: "#666",
+    fontSize: 16,
+  },
+  uploadCard: {
+    backgroundColor: "white",
+    margin: 20,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 16,
+    color: "#222",
+  },
+  input: {
+    backgroundColor: "#f8f8f8",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    fontSize: 16,
+  },
+  uploadButton: {
+    backgroundColor: "#ffe4e6",
+    padding: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  uploadButtonText: {
+    color: "#e11d48",
+    fontWeight: "600",
+  },
+  postButton: {
+    backgroundColor: "#f43f5e",
+    padding: 18,
+    borderRadius: 18,
+    alignItems: "center",
+  },
+  postButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  feedTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    color: "#222",
+  },
+  postCard: {
+    backgroundColor: "white",
+    borderRadius: 24,
+    overflow: "hidden",
+    marginHorizontal: 20,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  postImage: {
+    width: "100%",
+    height: 280,
+  },
+  postContent: {
+    padding: 18,
+  },
+  postHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  postUser: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#222",
+  },
+  postTime: {
+    color: "#777",
+    marginTop: 2,
+  },
+  heart: {
+    fontSize: 24,
+  },
+  caption: {
+    color: "#444",
+    fontSize: 16,
+    lineHeight: 24,
+  },
+});
